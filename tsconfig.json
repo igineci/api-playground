@@ -4,6 +4,9 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
   ],
+  "strict": true,
+  "noUnusedLocals": true,
+  "noUnusedParameters": true,
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
