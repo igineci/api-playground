@@ -5,25 +5,26 @@ import type { ApiResponse, RequestConfig } from "../types";
  */
 function simulateDelay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     // removeEventListener needs a reference to the exact same function that was added
     const onAbort = () => {
-      clearTimeout(timer);
+      if (timer !== undefined) clearTimeout(timer);
       reject(new DOMException("The operation was aborted", "AbortError"));
     };
 
-    // if the user clicked Cancel before the request even started, reject the promise
     if (signal.aborted) {
       reject(new DOMException("The operation was aborted", "AbortError"));
       return;
     }
 
-    const timer = setTimeout(() => {
+    signal.addEventListener("abort", onAbort, { once: true });
+
+    timer = setTimeout(() => {
       // timer finished before abort, clean up the abort listener
       signal.removeEventListener("abort", onAbort);
       resolve();
     }, ms);
-
-    signal.addEventListener("abort", onAbort, { once: true });
   });
 }
 
