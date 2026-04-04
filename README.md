@@ -4,15 +4,15 @@ Frontend scaffold for an **API Playground**: A simple tool for testing API endpo
 
 ## Stack
 
-| Area | Choice |
-|------|--------|
-| Runtime / UI | React 19, TypeScript |
-| Build | Vite 8 |
-| Styling | Tailwind CSS v4 (`@tailwindcss/vite`), PostCSS (Autoprefixer) |
-| Components | shadcn/ui (Radix primitives, CVA, `tailwind-merge`) |
-| Icons | HugeIcons |
-| Fonts | Geist Variable (`@fontsource-variable/geist`) |
-| Quality | ESLint 9 (flat config), Prettier |
+| Area         | Choice                                                        |
+| ------------ | ------------------------------------------------------------- |
+| Runtime / UI | React 19, TypeScript                                          |
+| Build        | Vite 8                                                        |
+| Styling      | Tailwind CSS v4 (`@tailwindcss/vite`), PostCSS (Autoprefixer) |
+| Components   | shadcn/ui (Radix primitives, CVA, `tailwind-merge`)           |
+| Icons        | HugeIcons                                                     |
+| Fonts        | Geist Variable (`@fontsource-variable/geist`)                 |
+| Quality      | ESLint 9 (flat config), Prettier                              |
 
 Path alias: `@/*` → [`src/`](./src).
 
@@ -41,10 +41,10 @@ Open the URL printed in the terminal (default: [http://localhost:5173](http://lo
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Dev server via Vite |
-| `npm run build` | TypeScript project references build (`tsc -b`) + production Vite bundle |
-| `npm run preview` | Serve the production build locally |
-| `npm run lint` | ESLint over the workspace |
-| `npm run format` | Prettier write |
+| Command           | Description                                                             |
+| ----------------- | ----------------------------------------------------------------------- |
+| `npm run dev`     | Dev server via Vite                                                     |
+| `npm run build`   | TypeScript project references build (`tsc -b`) + production Vite bundle |
+| `npm run preview` | Serve the production build locally                                      |
+| `npm run lint`    | ESLint over the workspace                                               |
+| `npm run format`  | Prettier write                                                          |
