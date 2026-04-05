@@ -1,3 +1,4 @@
+import PipelineVisualizer from "./PipelineVisualizer";
 import RequestComposer from "./RequestComposer";
 
 export default function ApiPlayground() {
@@ -11,6 +12,10 @@ export default function ApiPlayground() {
   
           <section className="flex flex-col gap-4 p-6 rounded-lg border bg-card">
             <RequestComposer />
+          </section>
+
+          <section className="p-6 rounded-lg border bg-card">
+          <PipelineVisualizer />
           </section>
   
         </div>
