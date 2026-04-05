@@ -84,15 +84,20 @@ export function useApiRequest(): UseApiRequestReturn {
       setCountdown(config.timeoutSeconds);
 
       // countdown is visual only — does not control abort timing
-      countdownIdRef.current = setInterval(() => {
+      const countdownId = setInterval(() => {
         setCountdown((prev) => {
           if (prev === null || prev <= 1) {
-            clearInterval(countdownIdRef.current!);
+            // interval clears when it reaches 0
+            clearInterval(countdownId);
+            countdownIdRef.current = null;
             return 0;
-          };
+          }
           return prev - 1;
         });
       }, 1000);
+
+      // store the interval for clearTimers to clean up
+      countdownIdRef.current = countdownId;
 
       timeoutIdRef.current = setTimeout(() => {
         controller.abort();
