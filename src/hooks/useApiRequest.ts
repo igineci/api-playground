@@ -116,8 +116,15 @@ export function useApiRequest(): UseApiRequestReturn {
 
           clearTimers();
           setCountdown(null);
-          setStage("success");
-          setResponse(result);
+
+          if (result.status >= 400) {
+            setStage("error");
+            setError(`Request failed: ${result.status} ${result.statusText}`);
+            setResponse(result);
+          } else {
+            setStage("success");
+            setResponse(result);
+          }
         } catch (err) {
           // If aborted, cancel/timeout handler already set the correct state.
           // Updating state here would overwrite their work and cause flickering.
