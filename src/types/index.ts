@@ -30,6 +30,7 @@ export interface ApiResponse {
 export interface ValidationErrors {
     url?: string;
     timeoutSeconds?: string;
+    body?: string;
 }
 
 
