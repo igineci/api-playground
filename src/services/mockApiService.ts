@@ -2,14 +2,18 @@ import type { ApiResponse, RequestConfig } from "../types";
 
 /**
  * Simulates network delay while respecting AbortSignal.
+ * @throws {DOMException} with name "AbortError" if signal is aborted
+ * before the delay completes
  */
 function simulateDelay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    const ref = {
+      timer: undefined as ReturnType<typeof setTimeout> | undefined,
+    };
 
     // removeEventListener needs a reference to the exact same function that was added
     const onAbort = () => {
-      if (timer !== undefined) clearTimeout(timer);
+      if (ref.timer !== undefined) clearTimeout(ref.timer);
       reject(new DOMException("The operation was aborted", "AbortError"));
     };
 
@@ -20,7 +24,7 @@ function simulateDelay(ms: number, signal: AbortSignal): Promise<void> {
 
     signal.addEventListener("abort", onAbort, { once: true });
 
-    timer = setTimeout(() => {
+    ref.timer = setTimeout(() => {
       // timer finished before abort, clean up the abort listener
       signal.removeEventListener("abort", onAbort);
       resolve();
@@ -28,29 +32,59 @@ function simulateDelay(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
-// helper function to build mock body based on request config
-function buildMockBody(config: RequestConfig): unknown {
+/** Stable shape for invalid JSON on POST/PUT; hook treats status ≥400 as error with body. */
+const INVALID_JSON_ERROR_BODY = {
+  error: "Request body is not valid JSON",
+  code: "INVALID_JSON" as const,
+};
+
+type BuildMockBodyResult = { ok: true; body: unknown } | { ok: false };
+
+function buildMockBody(config: RequestConfig): BuildMockBodyResult {
   switch (config.method) {
     case "GET":
       return {
-        data: [
-          { id: 1, name: "Item 1" },
-          { id: 2, name: "Item 2" },
-        ],
+        ok: true,
+        body: {
+          data: [
+            { id: 1, name: "Item 1" },
+            { id: 2, name: "Item 2" },
+          ],
+        },
       };
-    case "POST":
-      return {
-        id: Math.floor(Math.random() * 1000),
-        ...JSON.parse(config.body ?? "{}"),
-        createdAt: new Date().toISOString(),
-      };
-    case "PUT":
-      return {
-        ...JSON.parse(config.body ?? "{}"),
-        updatedAt: new Date().toISOString(),
-      };
+    case "POST": {
+      try {
+        return {
+          ok: true,
+          body: {
+            id: Math.floor(Math.random() * 1000),
+            // body is undefined when user leaves textarea empty — treat as {}
+            ...JSON.parse(config.body ?? "{}"),
+            createdAt: new Date().toISOString(),
+          },
+        };
+      } catch {
+        return { ok: false };
+      }
+    }
+    case "PUT": {
+      try {
+        return {
+          ok: true,
+          body: {
+            ...JSON.parse(config.body ?? "{}"),
+            updatedAt: new Date().toISOString(),
+          },
+        };
+      } catch {
+        return { ok: false };
+      }
+    }
     case "DELETE":
-      return { success: true, message: "Item deleted successfully" };
+      return {
+        ok: true,
+        body: { success: true, message: "Item deleted successfully" },
+      };
   }
 }
 
@@ -71,7 +105,17 @@ export async function mockFetch(
 
   await simulateDelay(delay, signal);
 
-  // 20% chance of returning an error
+  const built = buildMockBody(config);
+  if (!built.ok) {
+    return {
+      status: 400,
+      statusText: "Bad Request",
+      body: INVALID_JSON_ERROR_BODY,
+      durationMs: Date.now() - startTime,
+    };
+  }
+
+  // Simulates real-world server failures
   if (Math.random() < 0.2) {
     return {
       status: 500,
@@ -85,7 +129,7 @@ export async function mockFetch(
   return {
     status: 200,
     statusText: "OK",
-    body: buildMockBody(config),
+    body: built.body,
     durationMs: Date.now() - startTime,
   };
 }

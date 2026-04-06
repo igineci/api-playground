@@ -4,12 +4,10 @@ import ApiPlayground from './components/ApiPlayground';
 function App() {
 
   return (
-    <>
-      <RequestProvider>
-        <ApiPlayground />
-      </RequestProvider>
-    </> 
-  )
+    <RequestProvider>
+      <ApiPlayground />
+    </RequestProvider>
+  );
 }
 
 export default App
