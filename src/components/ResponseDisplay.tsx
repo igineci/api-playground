@@ -15,13 +15,17 @@ function getStatusStyles(status: number): string {
 export default function ResponseDisplay() {
   const { response, stage } = useRequestContext();
 
-  if (stage !== 'success' || !response) return null;
+  if (!response) return null;
+  if (stage !== 'success' && stage !== 'error') return null;
+
+  const isHttpError = stage === 'error';
 
   return (
     <section className={clsx(
       'flex flex-col gap-4 p-6 rounded-lg border',
       'transition-all duration-500',
-      'border-emerald-900 bg-zinc-950'
+      'bg-zinc-950',
+      isHttpError ? 'border-red-900' : 'border-emerald-900'
     )}>
       <div className="flex items-center gap-3">
         <span className={clsx(
@@ -32,16 +36,19 @@ export default function ResponseDisplay() {
           {response.status} {response.statusText}
         </span>
         <span className="font-mono text-xs text-zinc-600 tracking-wide">
-          Completed in {response.durationMs}ms
+          {stage === 'success' ? `Completed in ${response.durationMs}ms` : `Failed after ${response.durationMs}ms`}
         </span>
       </div>
 
-      <pre className={clsx(
-        'text-xs font-mono rounded-md p-4',
-        'overflow-auto max-h-96 text-left leading-relaxed',
-        'bg-black/40 text-zinc-300',
-        'border border-zinc-800'
-      )}>
+      <pre 
+        aria-label="Response"
+        className={clsx(
+            'text-xs font-mono rounded-md p-4',
+            'overflow-auto max-h-96 text-left leading-relaxed',
+            'bg-black/40 text-zinc-300',
+            'border border-zinc-800'
+         )}
+      >
         {formatBody(response.body)}
       </pre>
     </section>

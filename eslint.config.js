@@ -9,6 +9,12 @@ export default defineConfig([
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
+    rules: {
+      // Context files intentionally export both Provider components
+      // and hooks — splitting them would add indirection without
+      // architectural benefit at this scale.
+      "react-refresh/only-export-components": "off",
+    },
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,

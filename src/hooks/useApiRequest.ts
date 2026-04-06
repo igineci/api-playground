@@ -2,6 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { mockFetch } from "../services/mockApiService";
 import type { PipelineStage, ApiResponse, RequestConfig } from "../types";
 
+/** How often we recompute seconds-left from the deadline (not the driver of abort). */
+const COUNTDOWN_POLL_MS = 250;
+
+function remainingSecondsFromDeadline(endsAt: number): number {
+  return Math.max(0, Math.ceil((endsAt - performance.now()) / 1000));
+}
+
 interface UseApiRequestReturn {
   stage: PipelineStage;
   response: ApiResponse | null;
@@ -27,6 +34,10 @@ export function useApiRequest(): UseApiRequestReturn {
   const countdownIdRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // tracked separately so clearTimers covers every exit path
   const sendingDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ref mirrors stage so the Escape listener reads current value
+  // without re-registering on every stage change
+  const stageRef = useRef<PipelineStage>(stage);
+  stageRef.current = stage;
 
   const clearTimers = useCallback(() => {
     if (timeoutIdRef.current !== null) {
@@ -79,24 +90,33 @@ export function useApiRequest(): UseApiRequestReturn {
       setCancelledMessage(null);
       setStage("sending");
 
-      // start the countdown and timeout timer
+      // Single deadline: same end moment for abort + UI. Uses monotonic clock so the
+      // banner stays aligned with setTimeout even if wall-clock Date jumps.
       const timeoutMs = config.timeoutSeconds * 1000;
-      setCountdown(config.timeoutSeconds);
+      const endsAt = performance.now() + timeoutMs;
 
-      // countdown is visual only — does not control abort timing
-      const countdownId = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            // interval clears when it reaches 0
-            clearInterval(countdownId);
-            countdownIdRef.current = null;
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      let lastDisplayedSeconds: number | null = null;
 
-      // store the interval for clearTimers to clean up
+      const syncCountdownFromDeadline = () => {
+        const sec = remainingSecondsFromDeadline(endsAt);
+        if (sec !== lastDisplayedSeconds) {
+          lastDisplayedSeconds = sec;
+          setCountdown(sec);
+        }
+        if (sec <= 0 && countdownIdRef.current !== null) {
+          clearInterval(countdownIdRef.current);
+          countdownIdRef.current = null;
+        }
+      };
+
+      syncCountdownFromDeadline();
+
+      // Poll faster than 1s: if the main thread stalls or the tab is throttled, we still
+      // jump to the correct second as soon as we get CPU again.
+      const countdownId = setInterval(
+        syncCountdownFromDeadline,
+        COUNTDOWN_POLL_MS,
+      );
       countdownIdRef.current = countdownId;
 
       timeoutIdRef.current = setTimeout(() => {
@@ -147,17 +167,22 @@ export function useApiRequest(): UseApiRequestReturn {
     [clearTimers],
   );
 
+  // stageRef keeps the listener stable — no add/remove on every stage change
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && (stage === "sending" || stage === "waiting")) {
+      if (
+        e.key === "Escape" &&
+        (stageRef.current === "sending" || stageRef.current === "waiting")
+      ) {
         cancelRequest();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [stage, cancelRequest]);
+  }, [cancelRequest]);
 
+  // abort and clear on unmount to prevent state updates on unmounted component
   useEffect(() => {
     return () => {
       abortControllerRef.current?.abort();

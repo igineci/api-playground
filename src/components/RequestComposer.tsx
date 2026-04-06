@@ -102,17 +102,24 @@ export default function RequestComposer() {
     
             {/* HTTP Method */}
             <div className="flex flex-col gap-1.5 w-36">
-              <Label className={labelClass}>Method</Label>
+              <Label htmlFor="request-method" className={labelClass}>
+                Method
+              </Label>
               <Select
                 value={method}
                 disabled={isActive}
                 onValueChange={(value) => {
-                  setMethod(value as HttpMethod);
+                  if (HTTP_METHODS.includes(value as HttpMethod)) {
+                    setMethod(value as HttpMethod);
+                  }
                   setErrors((prev) => ({ ...prev, body: undefined }));
                   handleFieldChange();
                 }}
               >
-                <SelectTrigger className={clsx(fieldClass, 'w-full h-9 px-3 tracking-widest uppercase')}>
+                <SelectTrigger
+                  id="request-method"
+                  className={clsx(fieldClass, 'w-full h-9 px-3 tracking-widest uppercase')}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -6,7 +6,11 @@ export default function PipelineVisualizer() {
   const { stage } = useRequestContext();
 
   return (
-    <div className="flex w-full items-center">
+    <div
+      className="flex w-full items-center"
+      role="group"
+      aria-label="Request pipeline"
+    >
       {STAGES.map((s, index) => (
         <Fragment key={s}>
           {index > 0 && (
@@ -15,8 +19,11 @@ export default function PipelineVisualizer() {
               aria-hidden
             />
           )}
-          <div className={getStageStyles(s, stage)}>
-            <div className={getDotStyles(s, stage)} />
+          <div
+            className={getStageStyles(s, stage)}
+            aria-current={s === stage ? 'step' : undefined}
+          >
+            <div className={getDotStyles(s, stage)} aria-hidden />
             <span>{toLabel(s)}</span>
           </div>
         </Fragment>
