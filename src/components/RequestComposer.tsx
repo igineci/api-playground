@@ -66,6 +66,8 @@ export default function RequestComposer() {
               placeholder="https://api.example.com/endpoint"
               value={url}
               disabled={isActive}
+              aria-invalid={!!errors.url}
+              aria-describedby={errors.url ? 'url-error' : undefined}
               onChange={(e) => {
                 setUrl(e.target.value);
                 handleFieldChange();
@@ -114,6 +116,8 @@ export default function RequestComposer() {
                 max={MAX_TIMEOUT}
                 value={timeoutSeconds}
                 disabled={isActive}
+                aria-invalid={errors.timeoutSeconds ? true : undefined}
+                aria-describedby={errors.timeoutSeconds ? 'timeout-error' : undefined}
                 onChange={(e) => {
                   setTimeoutSeconds(e.target.value);
                   handleFieldChange();

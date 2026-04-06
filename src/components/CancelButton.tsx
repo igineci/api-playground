@@ -20,9 +20,6 @@ export default function CancelButton() {
       )}
     >
       Cancel
-      <span className="ml-2 text-zinc-600 normal-case tracking-normal">
-        esc
-      </span>
     </button>
   );
 }

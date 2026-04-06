@@ -4,7 +4,10 @@ export const MAX_TIMEOUT = 300;
 export function validateUrl(url: string): string | undefined {
   if (!url.trim()) return "URL is required";
   try {
-    new URL(url);
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "URL must start with http:// or https://";
+    }
   } catch {
     return "URL must be a valid format (e.g. https://api.example.com)";
   }
@@ -13,6 +16,7 @@ export function validateUrl(url: string): string | undefined {
 export function validateTimeout(timeout: string): string | undefined {
   const num = Number(timeout);
   if (!timeout.trim() || isNaN(num)) return "Timeout must be a number";
+  if (!Number.isInteger(num)) return "Timeout must be a whole number";
   if (num < MIN_TIMEOUT || num > MAX_TIMEOUT)
     return `Timeout must be between ${MIN_TIMEOUT} and ${MAX_TIMEOUT} seconds`;
 }
