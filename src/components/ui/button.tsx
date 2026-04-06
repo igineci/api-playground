@@ -19,8 +19,17 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /** API Playground */
+        playground:
+          "rounded-md border-teal-900 bg-teal-800 font-mono text-xs font-medium tracking-widest uppercase text-zinc-300 shadow-none transition-all duration-300 hover:border-teal-900 hover:bg-teal-900 hover:text-zinc-100 focus-visible:border-teal-700 focus-visible:ring-3 focus-visible:ring-teal-900/35",
+        /** API Playground */
+        playgroundCancel:
+          "rounded-md border-zinc-700 bg-transparent font-mono text-xs tracking-widest uppercase text-zinc-400 shadow-none transition-all duration-300 hover:border-red-800 hover:bg-red-950 hover:text-red-400 focus-visible:border-red-700 focus-visible:ring-3 focus-visible:ring-red-900/30",
       },
       size: {
+        /** API Playground */
+        playground:
+          "h-10 w-full min-w-0 gap-1.5 px-4 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
         default:
           "h-9 gap-1.5 px-3 has-data-[icon=inline-end]:pr-2.5 has-data-[icon=inline-start]:pl-2.5",
         xs: "h-6 gap-1 px-2.5 text-xs has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3",
@@ -42,7 +51,7 @@ const buttonVariants = cva(
 function Button({
   className,
   variant = "default",
-  size = "default",
+  size,
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
@@ -51,12 +60,20 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
 
+  const resolvedSize =
+    size ??
+    (variant === "playground" || variant === "playgroundCancel"
+      ? "playground"
+      : "default")
+
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
-      data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      data-size={resolvedSize}
+      className={cn(
+        buttonVariants({ variant, size: resolvedSize, className }),
+      )}
       {...props}
     />
   )
