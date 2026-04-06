@@ -87,11 +87,7 @@ export default function RequestComposer() {
                 disabled={isActive}
                 onValueChange={(value) => {
                   setMethod(value as HttpMethod);
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next.body;
-                    return next;
-                  });
+                  setErrors((prev) => ({ ...prev, body: undefined }));
                   handleFieldChange();
                 }}
               >
