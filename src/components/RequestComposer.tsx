@@ -1,3 +1,4 @@
+import type { SyntheticEvent } from "react";
 import type { HttpMethod, ValidationErrors } from "../types";
 import { useState } from "react";
 import { useRequestContext } from "../context/RequestContext";
@@ -7,10 +8,18 @@ import { Input } from "./ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 import { validateUrl, validateTimeout, validateJsonBody, MIN_TIMEOUT, MAX_TIMEOUT } from "../utils/validation";
+import clsx from "clsx";
 
 
 const HTTP_METHODS: HttpMethod[] = ['GET', 'POST', 'PUT', 'DELETE'];
 const DEFAULT_TIMEOUT = 30;
+
+const labelClass =
+  'font-mono text-[11px] font-medium tracking-widest uppercase text-zinc-500 select-none';
+const fieldClass =
+  'rounded-md border-teal-900 bg-transparent font-mono text-xs tracking-wide text-turquoise-500 placeholder:text-zinc-600 focus-visible:border-turquoise-500 focus-visible:ring-0 dark:bg-transparent';
+const errorClass =
+  'font-mono text-[11px] tracking-wide text-red-400/90';
 
 export default function RequestComposer() {
     const { sendRequest, stage, reset } = useRequestContext();
@@ -30,7 +39,7 @@ export default function RequestComposer() {
         if (stage !== 'idle') reset();
     };
 
-    const handleSubmit = () => {
+    const submitRequest = () => {
         const urlError = validateUrl(url);
         const timeoutError = validateTimeout(timeoutSeconds);
         const bodyError = hasBody ? validateJsonBody(body) : undefined;
@@ -54,12 +63,19 @@ export default function RequestComposer() {
         });
       };
 
+    const handleFormSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      submitRequest();
+    };
+
       return (
-        <div className="flex flex-col gap-4">
+        <form className="flex flex-col gap-4" onSubmit={handleFormSubmit} noValidate>
     
           {/* URL */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="url">URL</Label>
+            <Label htmlFor="url" className={labelClass}>
+              URL
+            </Label>
             <Input
               id="url"
               type="url"
@@ -68,13 +84,16 @@ export default function RequestComposer() {
               disabled={isActive}
               aria-invalid={!!errors.url}
               aria-describedby={errors.url ? 'url-error' : undefined}
+              className={fieldClass}
               onChange={(e) => {
                 setUrl(e.target.value);
                 handleFieldChange();
               }}
             />
             {errors.url && (
-              <p className="text-sm text-destructive">{errors.url}</p>
+              <p id="url-error" className={errorClass} role="alert">
+                {errors.url}
+              </p>
             )}
           </div>
     
@@ -83,7 +102,7 @@ export default function RequestComposer() {
     
             {/* HTTP Method */}
             <div className="flex flex-col gap-1.5 w-36">
-              <Label>Method</Label>
+              <Label className={labelClass}>Method</Label>
               <Select
                 value={method}
                 disabled={isActive}
@@ -93,7 +112,7 @@ export default function RequestComposer() {
                   handleFieldChange();
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={clsx(fieldClass, 'w-full h-9 px-3 tracking-widest uppercase')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -107,8 +126,10 @@ export default function RequestComposer() {
             </div>
     
             {/* Timeout */}
-            <div className="flex flex-col gap-1.5 flex-1">
-              <Label htmlFor="timeout">Timeout (seconds)</Label>
+            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+              <Label htmlFor="timeout" className={labelClass}>
+                Timeout (seconds)
+              </Label>
               <Input
                 id="timeout"
                 type="number"
@@ -118,13 +139,14 @@ export default function RequestComposer() {
                 disabled={isActive}
                 aria-invalid={errors.timeoutSeconds ? true : undefined}
                 aria-describedby={errors.timeoutSeconds ? 'timeout-error' : undefined}
+                className={fieldClass}
                 onChange={(e) => {
                   setTimeoutSeconds(e.target.value);
                   handleFieldChange();
                 }}
               />
               {errors.timeoutSeconds && (
-                <p className="text-sm text-destructive">
+                <p id="timeout-error" className={errorClass} role="alert">
                   {errors.timeoutSeconds}
                 </p>
               )}
@@ -135,7 +157,9 @@ export default function RequestComposer() {
           {/* Body — only for POST and PUT */}
           {hasBody && (
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="body">Request body</Label>
+              <Label htmlFor="body" className={labelClass}>
+                Request body
+              </Label>
               <Textarea
                 id="body"
                 placeholder='{ "key": "value" }'
@@ -143,6 +167,8 @@ export default function RequestComposer() {
                 value={body}
                 disabled={isActive}
                 aria-invalid={errors.body ? true : undefined}
+                aria-describedby={errors.body ? 'body-error' : undefined}
+                className={clsx(fieldClass, 'min-h-22 resize-y rounded-md py-2.5')}
                 onChange={(e) => {
                   setBody(e.target.value);
                   setErrors((prev) => ({ ...prev, body: undefined }));
@@ -150,20 +176,22 @@ export default function RequestComposer() {
                 }}
               />
               {errors.body && (
-                <p className="text-sm text-destructive">{errors.body}</p>
+                <p id="body-error" className={errorClass} role="alert">
+                  {errors.body}
+                </p>
               )}
             </div>
           )}
     
           {/* Send button*/}
-          <Button
-            onClick={handleSubmit}
-            disabled={isActive}
-            className="w-full"
+          <Button 
+            type="submit" 
+            disabled={isActive} 
+            variant="playground"
           >
             {isActive ? 'Sending...' : 'Send request'}
           </Button>
     
-        </div>
+        </form>
       );
     }
